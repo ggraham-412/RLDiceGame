@@ -96,6 +96,7 @@ def PlayGame(g, dice = None) :
     """    
     if dice is None :
         dice = g.RollGen.OneRoll()
+        dice.sort()
     print ("Initial roll:", dice)
     action = g.GetAction(dice, 0)
     keepers = []
