@@ -154,6 +154,7 @@ class RLGame (object):
         """
         filename = self.MakeFilename("actiontable")
         if not os.path.exists(filename) :
+            print ("Warning in game " + self.Name + ": Could not load action table from " + filename)
             return
         self.InitializeActionTable()
         file = open(filename,"r")

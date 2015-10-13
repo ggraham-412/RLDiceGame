@@ -2,6 +2,8 @@ import random
 from optparse import OptionParser
 from Yamslam import *
         
+import pdb
+        
 def GetYamslamRollCounts() :
     """
     This function analyzes all possible rolls of Yamslam and counts frequencies of
@@ -71,12 +73,24 @@ def DirectedTrain(game, num=1) :
                 newdice = game.EvalAction(x, a)
                 game.Learn(x, a, newdice)
 
+def Compare_ActionTable(game1, game2) :
+    """
+    Calculates the % of agreement on optimal action between Yamslam game1 
+    and game2.  
+    """        
+    count = 0
+    for x in game1.ActionTable.keys():
+        action1 = game1.GetAction(x,0)
+        action2 = game2.GetAction(x,0)
+        if action1 == action2 :
+            count = count + 1
+    return count / len(game1.ActionTable.keys())
+                
 def RMS_ActionTable(game1, game2) :
     """
     Calculates the RMS difference between the ActionTable values of Yamslam game1 
     and game2.  
-    """    
-    
+    """        
     sum = 0
     count = 0
     for x in game1.ActionTable.keys():
@@ -129,6 +143,9 @@ if __name__ == "__main__" :
     parser.add_option("-r", "--rms", type="string",
                   help="Name of game to compare (rms) training with",
                   dest="rname", default="")                  
+    parser.add_option("-c", "--compare", type="string",
+                  help="Name of game to compare (% agree) training with",
+                  dest="cname", default="")                  
 
     options, arguments = parser.parse_args()
 
@@ -145,8 +162,15 @@ if __name__ == "__main__" :
     
     if options.rname :
         ygr = YamslamGame(options.rname)
+        ygr.LoadActionTable()
         rms = RMS_ActionTable(yg,ygr)
         print(rms)
+    
+    if options.cname :
+        ygc = YamslamGame(options.cname)
+        ygc.LoadActionTable()
+        agree = Compare_ActionTable(yg,ygc)
+        print(agree)
     
     if options.nplay > 0 :
         for i in range(options.nplay) :
