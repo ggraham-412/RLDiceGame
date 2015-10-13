@@ -40,9 +40,14 @@ class YamslamRolls(IntEnum) :
     Bupkiss = 9
     
 class YamslamRollIdentifier(RollIdentifier) :    
-                    
+    """
+    This class defines functions that identify patterns in rolls of 5 dice and 
+    matches them to Yamslam hands.
+    """                
+
     NumSides = 6
 
+    # Pattern matchers
     Yamslam       = lambda counts : int(5 in counts)
     LargeStraight = lambda counts : int(counts.count(1) == 5 and \
                                        (counts[0]==0 or counts[5] == 0))
@@ -65,6 +70,9 @@ class YamslamRollIdentifier(RollIdentifier) :
                                        ((counts[2] == 0) or (counts[3] == 0)))
     
     def __init__(self) : 
+        """
+        Constructor
+        """
         super(YamslamRollIdentifier, self).__init__(YamslamRollIdentifier.NumSides)
         self.RegisterRollIdentifier(YamslamRolls.Yamslam, YamslamRollIdentifier.Yamslam)
         self.RegisterRollIdentifier(YamslamRolls.LargeStraight, YamslamRollIdentifier.LargeStraight)
@@ -78,7 +86,13 @@ class YamslamRollIdentifier(RollIdentifier) :
         self.RegisterRollIdentifier(YamslamRolls.Bupkiss, YamslamRollIdentifier.Bupkiss)
                             
 class YamslamGame (RLGame):
+    """
+    Implements the dice game Yamslam.  
+    
+    v 1.0:  Only one round implemented, and all chips are available.      
+    """
 
+    # Dictionary of points for different Yamslam rolls
     YamslamPoints = {
         YamslamRolls.Yamslam : 50,
         YamslamRolls.LargeStraight : 50,
@@ -98,39 +112,70 @@ class YamslamGame (RLGame):
     
     @staticmethod
     def StateKeyMaker(x) : 
+        """Sorted list as tuple"""
         y = list(x)
         y.sort()
         return tuple(y)
         
     @staticmethod
     def ActionKeyMaker(x)  : 
+        """Identity"""
         return x
 
     @staticmethod
     def EntryValue(x) : 
+        """Returns the score of an action entry"""
         return x[2]
 
     @staticmethod
     def EntryCreator(*args, **kwargs) :
+        """
+        Creates an an action entry as a 3 element list
+        
+        entry[0]: sum of score improvements
+        entry[1]: count of rolls trained
+        entry[2]: mean score improvement per roll/action        
+        """
         return [0] * 3
     
     @staticmethod
     def EntryUpdate(entry, score, *args, **kwargs) :
+        """
+        Updates an an action entry
+        
+        entry[0]: sum of score improvements
+        entry[1]: count of rolls trained
+        entry[2]: mean score improvement per roll/action        
+        """
         entry[0] += score
         entry[1] += 1
         entry[2] = entry[0]/entry[1]
     
     def ScoreAction(self, ini_state, action, fin_state, *args, **kwargs) :
+        """
+        Scores the improvement of an action by taking the difference of final 
+        roll value and initial roll value.
+        """
         hand_ini = self.BestRoll(ini_state)
         hand_fin = self.BestRoll(fin_state)
         return YamslamGame.YamslamPoints[hand_fin] - YamslamGame.YamslamPoints[hand_ini]
     
     def __init__(self, name="YamslamGame", randGen = random.randint) : 
+        """
+        Constructor
+        
+        Initializes components:
+          -RollGen:  a 5d6 dice roll generator for Yamslam 
+          -RollIdentifier:  a EollIdentifier for Yamslam 
+          -RollUnavailable: a map of rolls to logicals indicating if the 
+              roll is available for scoring.  (See rules of Yamslam for 
+              mor info.)
+        """
         self.RollGen = YamslamDiceGen()
         self.RollIdentifier = YamslamRollIdentifier()
-        self.HandUnavailable = {}
+        self.RollUnavailable = {}
         for roll in YamslamRolls :
-            self.HandUnavailable[roll] = False
+            self.RollUnavailable[roll] = False
         super(YamslamGame, self).__init__(name, YamslamGame.StateKeyMaker, \
                                                 YamslamGame.ActionKeyMaker, \
                                                 YamslamGame.EntryCreator, \
@@ -140,34 +185,58 @@ class YamslamGame (RLGame):
                 
     
     def BestRoll(self, dice) :
-        return self.RollIdentifier.FirstMatch(dice, self.HandUnavailable)
+        """
+        Returns the best matching Yamslam roll matching the dice
+        
+        dice:  A list of 5 die values comprising a turn in Yamslam
+        """
+        return self.RollIdentifier.FirstMatch(dice, self.RollUnavailable)
     
     def AllStates(self) :    
+        """Returns all possible rolls in Yamslam (5d6)"""
         return self.RollGen.AllRolls()
         
     def AllActions(self) :
+        """
+        Returns all possible actions.
+        
+        An action is an integer in the closed interval [0,31].  If bit 
+        i (2**i) is on, this corresponds to rolling the ith die.
+        """
         return range(2**YamslamGame.NumDice)
                    
     def EvalAction(self, dice, action) : 
+        """
+        Evaluates an initial roll of dice against the specified action..
+        
+        An action is an integer in the closed interval [0,31].  If bit 
+        i (2**i) is on, this corresponds to rolling the ith die.  Dice 
+        indicated as being rolled will be removed from the initial roll, 
+        and new dice will be rolled to replace them.  The resulting set of
+        dice comprises the final roll.
+        
+        dice: The initial roll of 5 dice
+        action: bitmask indicating which of the initial dice are to 
+                be re-rolled.
+        """
         newdice = []
         for i in range(YamslamGame.NumDice) :
             mask = 2 ** i
             if action & mask == 0 :
                 newdice.append(dice[i])
         newdice.extend(self.RollGen.OneRoll(len(newdice)))
-        newdice.sort()
         return newdice
                                         
     def ParseEntryLine(self, line) :
+        """
+        Parses a persisted actiontable line.
+        
+        line: string containing the state key, action key, and action entry
+        """
         tmp = line.split(")")
         tmp1 = tmp[1].split("[")
         return eval(tmp[0]+")"), eval(tmp1[0].split(",")[1]), eval("[" + tmp1[1])
                 
-    def DirectedLearn(self, dice, action, numtry) :    
-        for i in range(numtry) :
-            newdice = self.EvalAction(dice, action)
-            self.Learn(dice, action, newdice)
-
 if __name__ == "__main__" :
 
     # Test and Demo
