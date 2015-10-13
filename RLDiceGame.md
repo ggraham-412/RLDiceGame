@@ -16,6 +16,12 @@ a score based on the initial state and action taken.
 
 As a particular example, a training harness is provided for a popular dice game Yamslam, by 
 Blue Orange Games.  The harness and the game implement only one round of Yamslam, which comprises
+an initial roll of 5 6-sided dice, a decision to keep a subset of the 5 initial dice, and re-rolling
+the rest.  Each hand in Yamslam is associated with a point value, and the score of an action for a 
+given original roll is simply taken to be the average increase of points from initial to final rolls.
+The point values are 50 for a 5-of-a-kind, 50 for a straight of length 5, 40 for four-of-a-kind, 
+30 for a full house, 25 for a flush (all evens or all odds), 20 for a straight of length 4, 10 for
+three of a kind, and 5 for two pair.  Everything else is scored 0.
 
 #### Using the code
 
@@ -40,5 +46,36 @@ Options:
 
 #### Examples
 
-# Train a Uamslam game a
+```
+#  Initially training a Yamslam game
+python YamslamTrain.py -n MyYamslam -t 100 
 
+#  Result: creates a file MyYamslam_actiontable.dat with 100 trials of directed  
+#          training per roll/action combination.
+
+#  Add to existing trainning
+python YamslamTrain.py -n MyYamslam -t 100 
+
+#  Result: loads MyYamslam_actiontable.dat, adds 100 trials of directed training 
+#          per roll/action combination, and saves the result.
+
+#  Play a few games
+python YamslamTrain.py -n MyYamslam -p 10 
+
+#  Result: loads MyYamslam_actiontable.dat, plays 10 rounds of Yamslam and prints 
+           results to the console.
+
+#  Compare optimal actions to the reference set (10,000 trials of directed training
+#  provided with the repository.
+python YamslamTrain.py -n MyYamslam -c YamslamReference
+
+#  Result: loads MyYamslam_actiontable.dat and the reference set, computes probability
+           that the given Yamslam game agrees on optimal strategy for every unique state
+           
+#  Calculate average RMS difference to the reference set (10,000 trials of directed 
+#  training provided with the repository.
+python YamslamTrain.py -n MyYamslam -r YamslamReference
+
+#  Result: loads MyYamslam_actiontable.dat and the reference set, computes mean RMS
+           difference between action values for every state/action combo.
+```
