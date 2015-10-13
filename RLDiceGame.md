@@ -60,22 +60,45 @@ python YamslamTrain.py -n MyYamslam -t 100
 #          per roll/action combination, and saves the result.
 
 #  Play a few games
-python YamslamTrain.py -n MyYamslam -p 10 
+python YamslamTrain.py -n MyYamslam -p 5
 
-#  Result: loads MyYamslam_actiontable.dat, plays 10 rounds of Yamslam and prints 
-           results to the console.
+#  Result: loads MyYamslam_actiontable.dat, plays 5 rounds of Yamslam and prints 
+#          results to the console.
+
+Initial roll: [2, 2, 2, 5, 6]
+Keeping dice:  [1, 2, 3]
+Final roll: [2, 2, 2, 3, 4]
+
+Initial roll: [3, 3, 5, 5, 6]
+Keeping dice:  [1, 2, 3, 4]
+Final roll: [3, 3, 5, 5, 6]
+
+Initial roll: [1, 1, 4, 5, 6]
+Keeping dice:  [1, 2]
+Final roll: [1, 1, 5, 5, 6]
+
+Initial roll: [1, 2, 3, 4, 4]
+Keeping dice:  [1, 2, 3, 4]
+Final roll: [1, 2, 3, 4, 4]
+
+Initial roll: [1, 4, 4, 6, 6]
+Keeping dice:  [2, 3, 4, 5]
+Final roll: [2, 4, 4, 6, 6]
 
 #  Compare optimal actions to the reference set (10,000 trials of directed training
 #  provided with the repository.
 python YamslamTrain.py -n MyYamslam -c YamslamReference
 
 #  Result: loads MyYamslam_actiontable.dat and the reference set, computes probability
-           that the given Yamslam game agrees on optimal strategy for every unique state
+#         that the given Yamslam games agree on optimal strategy for every unique state
+0.7857142857142857
            
 #  Calculate average RMS difference to the reference set (10,000 trials of directed 
 #  training provided with the repository.
 python YamslamTrain.py -n MyYamslam -r YamslamReference
 
 #  Result: loads MyYamslam_actiontable.dat and the reference set, computes mean RMS
-           difference between action values for every state/action combo.
+#         difference between action values for every state/action combo.
+0.8117148902145583
+
 ```
