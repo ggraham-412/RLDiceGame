@@ -1,6 +1,5 @@
 import random
-import os
-
+from optparse import OptionParser
 from Yamslam import *
         
 def GetYamslamRollCounts() :
@@ -107,20 +106,49 @@ def PlayGame(g, dice = None) :
     print ("Keeping dice: ", keepers)
     newdice = g.EvalAction(dice, action)
     print ("Final roll:", newdice)
+    print ()
     
-    
+
         
 if __name__ == "__main__" :
 
-    #GetYamslamRollCounts()
-#    yg1 = YamslamGame("Yamslam1")
-#    yg1.LoadActionTable()
-#    yg2 = YamslamGame("Yamslam2")
-#    yg2.LoadActionTable()
-    yg3 = YamslamGame("Yamslam3")
-    yg3.LoadActionTable()
-    yg4 = YamslamGame("Yamslam4")
-    DirectedTrain(yg4, 20)
-    rms = RMS_ActionTable(yg4,yg3)
-    print (rms)
+    parser = OptionParser()
+    parser.add_option("-n", "--name", type="string",
+                  help="Name of Yamslam instance",
+                  dest="name", default="Yamslam")
+    parser.add_option("-t", "--train", type="int",
+                  help="Number of learning trials per roll/action",
+                  dest="ntrain", default="0")                  
+    parser.add_option("-i", "--import", type="string",
+                  help="Name of game to import training from",
+                  dest="iname", default="")
+    parser.add_option("-p", "--play", type="int",
+                  help="Number of demo games to play",
+                  dest="nplay", default="0")                  
+    parser.add_option("-r", "--rms", type="string",
+                  help="Name of game to compare (rms) training with",
+                  dest="rname", default="")                  
+
+    options, arguments = parser.parse_args()
+
+    yg = YamslamGame(options.name)
+    yg.LoadActionTable()
+    
+    if options.ntrain > 0 :
+        DirectedTrain(yg, options.ntrain)
+        yg.SaveActionTable()
+         
+    if options.iname :
+        yg.ImportActionTable(options.iname)
+        yg.SaveActionTable()
+    
+    if options.rname :
+        ygr = YamslamGame(options.rname)
+        rms = RMS_ActionTable(yg,ygr)
+        print(rms)
+    
+    if options.nplay > 0 :
+        for i in range(options.nplay) :
+            PlayGame(yg)
+            
 

@@ -151,6 +151,19 @@ class YamslamGame (RLGame):
         entry[1] += 1
         entry[2] = entry[0]/entry[1]
     
+    @staticmethod
+    def CombineEntryValue(resting_entry, incoming_entry) :
+        """
+        Combines incoming entry with the resting entry
+        
+        resting_entry: This entry will be altered to be the combination
+                       of itself and the incoming entry
+        incoming_entry: The entry to add to the resting_entry
+        """
+        resting_entry[0] = resting_entry[0] + incoming_entry[0]
+        resting_entry[1] = resting_entry[1] + incoming_entry[1]
+        resting_entry[2] = resting_entry[0] / resting_entry[1]
+                
     def ScoreAction(self, ini_state, action, fin_state, *args, **kwargs) :
         """
         Scores the improvement of an action by taking the difference of final 
@@ -181,6 +194,7 @@ class YamslamGame (RLGame):
                                                 YamslamGame.EntryCreator, \
                                                 YamslamGame.EntryValue, \
                                                 YamslamGame.EntryUpdate, \
+                                                YamslamGame.CombineEntryValue, \
                                                 YamslamGame.ScoreAction, randGen)
                 
     
@@ -225,8 +239,9 @@ class YamslamGame (RLGame):
             if action & mask == 0 :
                 newdice.append(dice[i])
         newdice.extend(self.RollGen.OneRoll(len(newdice)))
+        newdice.sort()
         return newdice
-                                        
+                                    
     def ParseEntryLine(self, line) :
         """
         Parses a persisted actiontable line.
@@ -262,7 +277,7 @@ if __name__ == "__main__" :
     assert YamslamRolls.OnePair in all, "failed all match one pair"
     assert YamslamRolls.SmallStraight in all, "failed all match small straight"
     
-    ygm = YamslamGame("Yamslam")
+    ygm = YamslamGame("YamslamTest")
     
     assert len(ygm.ActionTable.keys())==252, "failed action table length"
     dice = [1,3,3,4,4]
@@ -278,6 +293,8 @@ if __name__ == "__main__" :
     
     ygm.SaveActionTable()    
     ygm.LoadActionTable()
+    ygm.ImportActionTable("YamslamTest_actiontable.dat")
+    assert ygm.ActionTable[(1,3,3,4,4)][1][1] == 100, "failed import"
     
     print ("ok") 
     

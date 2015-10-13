@@ -22,6 +22,7 @@ class RLGame (object):
                        entryCreate, \
                        entryValue,  \
                        entryUpdate, \
+                       entryCombine,\
                        scoreAction, \
                        randGen = random.randint) : 
         self.InitializeActionTable() 
@@ -31,6 +32,7 @@ class RLGame (object):
         self.EntryCreator = entryCreate   
         self.GetEntryValue = entryValue
         self.UpdateEntryValue = entryUpdate
+        self.CombineEntryValue = entryCombine
         self.RandGen = randGen
 
     def InitializeActionTable(self, *args, **kwargs) :
@@ -130,6 +132,20 @@ class RLGame (object):
                 file.write(',')
                 file.write(repr(entry))
                 file.write("\n")
+        file.close()
+
+    def ImportActionTable(self, fromfile) :        
+        """
+        Imports the contents of the given file and combines with the 
+        existing action table.  (Take care not to import the same data 
+        more than once!)
+        """
+        if not os.path.exists(fromfile) :
+            return
+        file = open(filename,"r")
+        for line in file.readlines() :
+            skey, akey, entry = self.ParseEntryLine(line)
+            self.CombineEntryValue(self.ActionTable[skey][akey], entry)
         file.close()
 
     def LoadActionTable(self) :
